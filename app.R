@@ -1,10 +1,14 @@
 
+
+
+
 #Loading libraries:
 library(shiny)
 library(tidyverse)
 library(AER)
 library(leaflet)
 library(magrittr)
+library(Cairo)
 
 
 
@@ -18,34 +22,23 @@ windsor<-data.frame(lat=c(42.317099),
 #Create first panel:
 intro_panel<-tabPanel("Home",
                       mainPanel(
-                      HTML(
-                        paste(
-                          h3("PREDICTING HOUSE PRICING IN WINDSOR, CANADA"),'<br/>'
+                        HTML(
+                          paste(
+                            h3("PREDICTING HOUSE PRICING IN WINDSOR, CANADA"),'<br/>'
+                          )
                         )
-                      )
-                    ),
-                    
-                      fluidRow(
-                        column(width = 8,
-                               plotOutput("map",
-                                          
-                               )),
-                        column(width = 4,
-                               h2("Info")
-                               
-                        )
-                      )
+                      ),
+                      leafletOutput('map', width = '100%', height = '300px'),
+                      absolutePanel(top = 10, right = 10, id = 'controls'
+                      ),
+                      DT::DTOutput("esTable")
 )
+                      
+                      
+                          
+        
   
   
-  
-  
-  
-
-
-
-
-
 
 # Define UI for application:
 ui <- fluidPage(navbarPage("",
@@ -57,23 +50,21 @@ ui <- fluidPage(navbarPage("",
 server <- function(input, output) { 
   
   
-  output$map <- renderPlot(
+  output$map <-renderLeaflet({
     leaflet() %>% 
-      addProviderTiles("PREDICTING HOUSE PRICES IN WINDSOR, CANADA") %>% 
+      addTiles() %>% 
       addCircleMarkers(data = windsor,
                        lat = ~lat, lng = ~lon,
                        color = "blue")
     
+  })
+  
+
+  
+
     
-  )
-  
-  
-  
-  
-  
-  
-  
-  }
+    }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
