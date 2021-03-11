@@ -66,11 +66,13 @@ descript_panel<-tabPanel("Descriptive analysis",
                         
                           ),
                           
-                          mainPanel(plotOutput( "p_uni"),
+                          mainPanel(plotOutput( "p_uni",click = "click"),
+                                    h4("Plot info"),
+                                    div(style="width:450px;",fluidRow(verbatimTextOutput("plot_info", placeholder = TRUE))),
                                     h4("Descriptive statistics of the main selected variable"),
-                                    div(style="width:400px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
+                                    div(style="width:450px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
                                     h4("Descriptive statistics of the grouping selected variable"),
-                                    div(style="width:400px;",fluidRow(verbatimTextOutput("summary2", placeholder = TRUE)))
+                                    div(style="width:450px;",fluidRow(verbatimTextOutput("summary2", placeholder = TRUE)))
                           )
                                    
                                    
@@ -107,14 +109,35 @@ server <- function(input, output) {
           y_name=HousePrices[,input$select_G]
           
           if (input$select_P== "Boxplot") {
+            
             url <- a("What is a Boxplot?", href="https://en.wikipedia.org/wiki/Box_plot")
             output$tab <- renderUI({
-              
-              tagList(url)
-              
+               tagList(url)
             })
+            
+            output$plot_info <- renderText({
+              y_name=HousePrices[,input$select_G]
+              lvls <- levels(y_name)
+              #name <- lvls[input$plot_click$y]
+              name<-as.numeric(input$click$y)
+              HTML("You've selected <code>", name)
+              
+              # a=strtrim(input$click$y,4)
+              # paste0("Main variable value =",a)
+              
+              #keeprows <- round(input$plot_click$y) == as.numeric(y_name)
+              #head(HousePrices[keeprows, ], 2)
+            })
+            
+            
+            
             ggplot(HousePrices, aes(x=x_name, group=y_name, fill=y_name)) +
               geom_boxplot()+scale_fill_brewer(palette="RdBu")
+            
+            
+            
+            
+            
           }
           
           else if (input$select_P== "Histogram") {
@@ -130,12 +153,17 @@ server <- function(input, output) {
           }
     
           else if (input$select_P== "Scatterplot") {
+            
             url <- a("What is a Scatterplot?", href="https://en.wikipedia.org/wiki/Scatter_plot")
             output$tab <- renderUI({
-              
               tagList(url)
-              
             })
+            
+            output$plot_info <- renderText({
+              a=strtrim(input$click$y,6)
+              paste0("Main variable value =",a)
+            })
+            
             ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
               geom_point() + labs(x = "Index")
             
