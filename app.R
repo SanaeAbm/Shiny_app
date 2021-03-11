@@ -15,6 +15,7 @@ library(Cairo)
 #Get data:
 data("HousePrices")
 
+
 #Map coordinates:
 windsor<-data.frame(lat=c(42.317099),
                    lon=c(-83.0353434))
@@ -41,11 +42,14 @@ categ_list=setdiff(all_list,cont_list)
 HousePrices[,categ_list] %<>% lapply(function(x) as.factor(as.numeric(x)))
 plot_list=c("Histogram","Scatterplot","Boxplot")
 
+data2<-HousePrices
+data2[,categ_list] %<>% lapply(function(x) as.numeric(as.factor(x)))
+
+
 
 
 #Create descriptive panel:
-descript_panel<-navbarMenu("Descriptive analysis",
-                      tabPanel("Univariant analysis",
+descript_panel<-tabPanel("Descriptive analysis",
                        fluidPage(
                         sidebarLayout(sidebarPanel(
                           selectInput("select_V", label = h3("Choose main variable"), 
@@ -60,13 +64,14 @@ descript_panel<-navbarMenu("Descriptive analysis",
                           
                           uiOutput("tab")
                         
-                          
                           ),
                           
-                          mainPanel(plotOutput( "p_uni" ))
-                          
+                          mainPanel(plotOutput( "p_uni"),
+                                    verbatimTextOutput("summary1"),
+                                    verbatimTextOutput("summary2"))
+                                    
                         )))
-)
+
   
   
 
@@ -82,6 +87,7 @@ ui <- fluidPage(navbarPage("",
 server <- function(input, output) { 
   
   
+  
   output$map <-renderLeaflet({
     leaflet() %>% 
       addTiles() %>% 
@@ -92,46 +98,59 @@ server <- function(input, output) {
    
     
     output$p_uni<- renderPlot({
-      x_name=HousePrices[,input$select_V]
-      y_name=HousePrices[,input$select_G]
-      
-     
-     
+          x_name=HousePrices[,input$select_V]
+          y_name=HousePrices[,input$select_G]
+          
+          if (input$select_P== "Boxplot") {
+            url <- a("What is a Boxplot?", href="https://en.wikipedia.org/wiki/Box_plot")
+            output$tab <- renderUI({
+              
+              tagList(url)
+              
+            })
+            ggplot(HousePrices, aes(x=x_name, group=y_name, fill=y_name)) +
+              geom_boxplot()+scale_fill_brewer(palette="RdBu")
+          }
+          
+          else if (input$select_P== "Histogram") {
+            url <- a("What is an histogram?", href="https://en.wikipedia.org/wiki/Histogram")
+            
+            output$tab <- renderUI({
+              
+              tagList(url)
+              
+            })
+            ggplot( HousePrices, aes( x=x_name, color=y_name, fill=y_name) ) + geom_histogram(position="identity", alpha=0.5) +
+              ggtitle( "Frequency histogram")
+          }
     
-     
-      if (input$select_P== "Boxplot") {
-        url <- a("What is a Boxplot?", href="https://en.wikipedia.org/wiki/Box_plot")
+          else if (input$select_P== "Scatterplot") {
+            url <- a("What is a Scatterplot?", href="https://en.wikipedia.org/wiki/Scatter_plot")
+            output$tab <- renderUI({
+              
+              tagList(url)
+              
+            })
+            ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
+              geom_point() + labs(x = "Index")
+            
+          }
+    })
       
-        ggplot(HousePrices, aes(x=x_name, group=y_name, fill=y_name)) +
-          geom_boxplot()+scale_fill_brewer(palette="RdBu")
-      }
       
-      else if (input$select_P== "Histogram") {
-        url <- a("What is an histogram?", href="https://en.wikipedia.org/wiki/Histogram")
-        ggplot( HousePrices, aes( x=x_name, color=y_name, fill=y_name) ) + geom_histogram(position="identity", alpha=0.5) +
-          ggtitle( "Frequency histogram")
-        
-      }
-
-      else if (input$select_P== "Scatterplot") {
-        
-        url <- a("What is a Scatterplot?", href="https://en.wikipedia.org/wiki/Scatter_plot")
-        ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
-          geom_point() + labs(x = "Index")
-        
-      }
-      
-      output$tab <- renderUI({
-        tagList(url)
-      })
-      
+    
+    output$summary1<- renderPrint({
+      x_name=data2[,input$select_V]
+      summary(x_name) 
     })
     
-    
-    
-    
+    output$summary2<- renderPrint({
+      y_name=data2[,input$select_G]
+      summary(y_name) 
+    })
+  
 
-    }
+}
 
 
 # Run the application 
