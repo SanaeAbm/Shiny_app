@@ -67,8 +67,13 @@ descript_panel<-tabPanel("Descriptive analysis",
                           ),
                           
                           mainPanel(plotOutput( "p_uni"),
-                                    verbatimTextOutput("summary1"),
-                                    verbatimTextOutput("summary2"))
+                                    h4("Descriptive statistics of the main selected variable"),
+                                    div(style="width:400px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
+                                    h4("Descriptive statistics of the grouping selected variable"),
+                                    div(style="width:400px;",fluidRow(verbatimTextOutput("summary2", placeholder = TRUE)))
+                          )
+                                   
+                                   
                                     
                         )))
 
