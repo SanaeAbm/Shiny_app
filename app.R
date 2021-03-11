@@ -56,7 +56,12 @@ descript_panel<-navbarMenu("Descriptive analysis",
                                       selected = 1),
                           selectInput("select_P", label = h3("Choose plot type"), 
                                       choices = plot_list,
-                                      selected = 1)),
+                                      selected = 1),
+                          
+                          uiOutput("tab")
+                        
+                          
+                          ),
                           
                           mainPanel(plotOutput( "p_uni" ))
                           
@@ -84,30 +89,44 @@ server <- function(input, output) {
                        lat = ~lat, lng = ~lon,
                        color = "blue")
   })
-
+   
     
     output$p_uni<- renderPlot({
       x_name=HousePrices[,input$select_V]
       y_name=HousePrices[,input$select_G]
+      
+     
+     
+    
+     
       if (input$select_P== "Boxplot") {
+        url <- a("What is a Boxplot?", href="https://en.wikipedia.org/wiki/Box_plot")
+      
         ggplot(HousePrices, aes(x=x_name, group=y_name, fill=y_name)) +
           geom_boxplot()+scale_fill_brewer(palette="RdBu")
       }
       
       else if (input$select_P== "Histogram") {
+        url <- a("What is an histogram?", href="https://en.wikipedia.org/wiki/Histogram")
         ggplot( HousePrices, aes( x=x_name, color=y_name, fill=y_name) ) + geom_histogram(position="identity", alpha=0.5) +
           ggtitle( "Frequency histogram")
         
       }
 
       else if (input$select_P== "Scatterplot") {
+        
+        url <- a("What is a Scatterplot?", href="https://en.wikipedia.org/wiki/Scatter_plot")
         ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
           geom_point() + labs(x = "Index")
         
       }
       
+      output$tab <- renderUI({
+        tagList(url)
+      })
       
     })
+    
     
     
     
