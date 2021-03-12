@@ -33,7 +33,8 @@ intro_panel<-tabPanel("Home",
                       leafletOutput('map', width = '100%', height = '300px'),
                       absolutePanel(top = 10, right = 10, id = 'controls'
                       ),
-                      DT::DTOutput("esTable")
+                      DT::DTOutput("esTable"),
+                      h4("All models are wrong but some are useful")
 )
                       
 #Data tyding:
@@ -69,8 +70,9 @@ descript_panel<-tabPanel("Descriptive analysis",
                           ),
                           
                           mainPanel(plotOutput( "p_uni",click = "click"),
-                                    h4("Plot info"),
-                                    div(style="width:500px;",fluidRow(verbatimTextOutput("plot_info", placeholder = TRUE))),
+                                    uiOutput("slider"),
+                                    #h4("Plot info"),
+                                    div(style="width:500px;",fluidRow(verbatimTextOutput("plot_info", placeholder = FALSE))),
                                     h4("Descriptive statistics of the main selected variable"),
                                     div(style="width:500px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
                                     h4("Descriptive statistics of the grouping selected variable"),
@@ -118,6 +120,7 @@ server <- function(input, output) {
             })
             
             output$plot_info <- renderPrint({
+              req(input$select_P== "Boxplot")
               if (is.null(input$click$y)) cat ("No boxplot selected")
               else{
                   y_name=HousePrices[,input$select_G]
@@ -133,18 +136,22 @@ server <- function(input, output) {
             })
             
           
-          
-            
-            ggplot(HousePrices, aes(x=x_name, y=as.character(y_name), fill=y_name)) +
-              geom_boxplot()+scale_fill_brewer(palette="RdBu")
-            
-            
+           
+                ggplot(HousePrices, aes(x=x_name, y=as.character(y_name), fill=y_name)) +
+                  geom_boxplot()+scale_fill_brewer(palette="RdBu")
             
             
             
           }
           
           else if (input$select_P== "Histogram") {
+
+                        output$slider<-renderUI({
+              req(input$select_P== "Histogram")
+              sliderInput("n_bins", label="Number of bins", min = 1, max = 50, value = input$n_bins)
+
+            })
+            
             url <- a("What is an histogram?", href="https://en.wikipedia.org/wiki/Histogram")
             
             output$tab <- renderUI({
@@ -152,8 +159,12 @@ server <- function(input, output) {
               tagList(url)
               
             })
-            ggplot( HousePrices, aes( x=x_name, color=y_name, fill=y_name) ) + geom_histogram(position="identity", alpha=0.5) +
+  
+            
+            ggplot( HousePrices, aes( x=x_name, color=y_name, fill=y_name) ) +
+              geom_histogram(position="identity", alpha=0.5,bins=input$n_bins) +
               ggtitle( "Frequency histogram")
+           
           }
     
           else if (input$select_P== "Scatterplot") {
@@ -164,6 +175,7 @@ server <- function(input, output) {
             })
             
             output$plot_info <- renderText({
+              req(input$select_P== "Scatterplot")
               if (is.null(input$click$y)) paste0("No data point selected")
               
               else{
@@ -172,8 +184,10 @@ server <- function(input, output) {
             }
             })
             
-            ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
-              geom_point() + labs(x = "Index")
+       
+              ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
+                geom_point() + labs(x = "Index")
+                  
             
           }
     })
