@@ -5,6 +5,7 @@
 #Loading libraries:
 library(shiny)
 library(tidyverse)
+library(dplyr)
 library(AER)
 library(leaflet)
 library(magrittr)
@@ -46,6 +47,7 @@ data2<-HousePrices
 data2[,categ_list] %<>% lapply(function(x) as.numeric(as.factor(x)))
 
 
+data3<-HousePrices[,categ_list]
 
 
 #Create descriptive panel:
@@ -68,11 +70,11 @@ descript_panel<-tabPanel("Descriptive analysis",
                           
                           mainPanel(plotOutput( "p_uni",click = "click"),
                                     h4("Plot info"),
-                                    div(style="width:450px;",fluidRow(verbatimTextOutput("plot_info", placeholder = TRUE))),
+                                    div(style="width:500px;",fluidRow(verbatimTextOutput("plot_info", placeholder = TRUE))),
                                     h4("Descriptive statistics of the main selected variable"),
-                                    div(style="width:450px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
+                                    div(style="width:500px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
                                     h4("Descriptive statistics of the grouping selected variable"),
-                                    div(style="width:450px;",fluidRow(verbatimTextOutput("summary2", placeholder = TRUE)))
+                                    div(style="width:500px;",fluidRow(verbatimTextOutput("summary2", placeholder = TRUE)))
                           )
                                    
                                    
@@ -115,23 +117,25 @@ server <- function(input, output) {
                tagList(url)
             })
             
-            output$plot_info <- renderText({
-              y_name=HousePrices[,input$select_G]
-              lvls <- levels(y_name)
-              #name <- lvls[input$plot_click$y]
-              name<-as.numeric(input$click$y)
-              HTML("You've selected <code>", name)
-              
-              # a=strtrim(input$click$y,4)
-              # paste0("Main variable value =",a)
-              
-              #keeprows <- round(input$plot_click$y) == as.numeric(y_name)
-              #head(HousePrices[keeprows, ], 2)
+            output$plot_info <- renderPrint({
+              if (is.null(input$click$y)) cat ("No boxplot selected")
+              else{
+                  y_name=HousePrices[,input$select_G]
+                  lvls <- levels(y_name)
+                  name<-as.numeric(input$click$y)
+                  class <- floor(name)
+                  a=which(categ_list %in% input$select_G)
+                  b=as.numeric(a)
+                  head(subset(data3,data3[,b]==class),5)
+              }
+            
+            
             })
             
+          
+          
             
-            
-            ggplot(HousePrices, aes(x=x_name, group=y_name, fill=y_name)) +
+            ggplot(HousePrices, aes(x=x_name, y=as.character(y_name), fill=y_name)) +
               geom_boxplot()+scale_fill_brewer(palette="RdBu")
             
             
@@ -160,8 +164,12 @@ server <- function(input, output) {
             })
             
             output$plot_info <- renderText({
+              if (is.null(input$click$y)) paste0("No data point selected")
+              
+              else{
               a=strtrim(input$click$y,6)
               paste0("Main variable value =",a)
+            }
             })
             
             ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
