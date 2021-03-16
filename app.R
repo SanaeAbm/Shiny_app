@@ -8,6 +8,7 @@ library(AER)
 library(leaflet)
 library(magrittr)
 library(MASS)
+library(plotly)
 
 
 #Get data:
@@ -109,7 +110,10 @@ model<-tabPanel("Model section",
                       
                     ))),
                     
-                  tabPanel("Diagnosis"),
+                  tabPanel("Diagnosis",fluidPage(
+                           mainPanel(plotlyOutput( "qqplot"),
+                                     plotlyOutput( "rf")
+                           ))),
                   tabPanel("Prediction")
                   
 ))
@@ -255,10 +259,47 @@ server <- function(input, output) {
      best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
      final_model <- lm(best, data = HousePrices)
      summary(final_model)
+     
+    
       
+   })
+   
+   output$qqplot<- renderPlotly({
+     preds=paste(input$checkGroup,collapse="+")
+     fml = as.formula(paste(response,"~", preds))
+     fit = lm(fml, data=HousePrices)
+     c=as.numeric(input$select_criterion)
+     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
+     final_model <- lm(best, data = HousePrices)
+     summary(final_model)
+     
+     p2 <- ggplot(final_model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm = TRUE)
+     p2 <- p2+geom_abline()+xlab("Theoretical Quantiles")+ylab("Standardized Residuals")
+     p2 <- p2+ggtitle("Normal Q-Q")+theme_bw()
+     
+     print(ggplotly(p2))
      
    })
    
+   output$rf<-renderPlotly({
+     preds=paste(input$checkGroup,collapse="+")
+     fml = as.formula(paste(response,"~", preds))
+     fit = lm(fml, data=HousePrices)
+     c=as.numeric(input$select_criterion)
+     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
+     final_model <- lm(best, data = HousePrices)
+     summary(final_model)
+     
+     p33<-ggplot(final_model, aes(x = .fitted, y = .resid)) + geom_point()
+     p3<-p33+stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")
+     p3<-p33+xlab("Fitted values")+ylab("Residuals")
+     p3<-p33+ggtitle("Residual vs Fitted Plot")+theme_bw()
+     
+     
+     print(ggplotly(p3))
+
+   })
+  
    
    
    
