@@ -9,7 +9,6 @@ library(dplyr)
 library(AER)
 library(leaflet)
 library(magrittr)
-library(Cairo)
 
 
 
@@ -41,6 +40,8 @@ intro_panel<-tabPanel("Home",
 all_list=as.vector(names(HousePrices))
 cont_list=c("price","lotsize" )
 categ_list=setdiff(all_list,cont_list)
+predictors_lis=c(categ_list,"lotsize")
+response="price"
 HousePrices[,categ_list] %<>% lapply(function(x) as.factor(as.numeric(x)))
 plot_list=c("Histogram","Scatterplot","Boxplot")
 
@@ -55,13 +56,13 @@ data3<-HousePrices[,categ_list]
 descript_panel<-tabPanel("Descriptive analysis",
                        fluidPage(
                         sidebarLayout(sidebarPanel(
-                          selectInput("select_V", label = h3("Choose main variable"), 
+                          selectInput("select_V", label = h4("Choose main variable"), 
                                       choices = cont_list,
                                       selected = 1),
-                          selectInput("select_G", label = h3("Choose grouping variable"), 
+                          selectInput("select_G", label = h4("Choose grouping variable"), 
                                       choices = categ_list,
                                       selected = 1),
-                          selectInput("select_P", label = h3("Choose plot type"), 
+                          selectInput("select_P", label = h4("Choose plot type"), 
                                       choices = plot_list,
                                       selected = 1),
                           
@@ -71,7 +72,6 @@ descript_panel<-tabPanel("Descriptive analysis",
                           
                           mainPanel(plotOutput( "p_uni",click = "click"),
                                     uiOutput("slider"),
-                                    #h4("Plot info"),
                                     div(style="width:500px;",fluidRow(verbatimTextOutput("plot_info", placeholder = FALSE))),
                                     h4("Descriptive statistics of the main selected variable"),
                                     div(style="width:500px;",fluidRow(verbatimTextOutput("summary1", placeholder = TRUE))),
@@ -84,15 +84,43 @@ descript_panel<-tabPanel("Descriptive analysis",
                         )))
 
   
-  
+#Describe model section:
+
+model<-tabPanel("Model section",
+            
+                tabsetPanel(
+                  tabPanel("Build model", fluidPage(
+                    sidebarLayout(sidebarPanel(
+                      checkboxGroupInput("checkGroup", label = h4("Select the predictors"), 
+                                         choices = predictors_lis,
+                                         selected = "lotsize")),
+                      mainPanel( 
+                        h4("Summary of the selected model"),
+                                 div(style="width:500px;",fluidRow(verbatimTextOutput("model_summary", placeholder = TRUE))))
+                      
+                      
+                      
+                    )))
+                    ,
+                  tabPanel("Diagnosis"),
+                  tabPanel("Prediction")
+                  )
+
+)
+
+
+
 
 # Define UI for application:
 ui <- fluidPage(navbarPage("",
                            intro_panel,
-                           descript_panel
+                           descript_panel,
+                           model
                            
 )
 )
+
+
 
 # Define server logic:
 server <- function(input, output) { 
@@ -204,7 +232,13 @@ server <- function(input, output) {
       summary(y_name) 
     })
   
-
+   output$model_summary<-renderPrint({
+     preds=paste(input$checkGroup,collapse="+")
+     fml = as.formula(paste(response,"~", preds))
+     fit = lm(fml, data=HousePrices)
+     summary(fit)
+     
+   })
 }
 
 
