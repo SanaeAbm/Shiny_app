@@ -2,6 +2,7 @@
 
 #Loading libraries:
 library(shiny)
+library(shinyjs)
 library(tidyverse)
 library(dplyr)
 library(AER)
@@ -96,7 +97,9 @@ model<-tabPanel("Model section",
                     sidebarLayout(sidebarPanel(
                       checkboxGroupInput("checkGroup", label = h4("Select the predictors"), 
                                          choices = predictors_lis,
-                                         selected = "lotsize"),
+                                         selected = "lotsize"
+
+                                         ),
                       h5("Let's use a criterion to validate your selection"),
                       selectInput("select_criterion", label = h4("Choose the criterion"), 
                                   choices =list("AIC"=2,"BIC"=log(nrow(HousePrices)))),
@@ -118,7 +121,15 @@ model<-tabPanel("Model section",
                            mainPanel(plotlyOutput( "qqplot"),
                                      plotlyOutput( "rf")
                            ))),
-                  tabPanel("Prediction")
+                  tabPanel("Prediction",fluidPage(
+                           uiOutput("fact_inputs"),
+                           mainPanel(h4("The predicted prices according to the input:"),
+                            div(style="width:500px;",fluidRow(verbatimTextOutput("var_selected", placeholder = TRUE)))
+                           )
+                           
+                    
+                    
+                           ))
                   
 ))
 
@@ -142,12 +153,10 @@ ui <- fluidPage(navbarPage("",
 server <- function(input, output) { 
   
   output$data <- DT::renderDataTable({
-    DT::datatable(HousePrices, options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
+    DT::datatable(HousePrices, options = list(lengthMenu = c(10, 20, 30), pageLength = 10))
     
   })
                              
-  
-  
   
   output$map <-renderLeaflet({
     leaflet() %>% 
@@ -311,9 +320,43 @@ server <- function(input, output) {
    })
   
    
+   output$var_selected<- renderText({
+     
+     preds=paste(input$checkGroup,collapse="+")
+     fml = as.formula(paste(response,"~", preds))
+     fit = lm(fml, data=HousePrices)
+     c=as.numeric(input$select_criterion)
+     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
+     final_model <- lm(best, data = HousePrices)
+    
+     # vars_sel<- as.vector(input$checkGroup)
+     # 
+     #   a<-as.numeric(input$num)
+     #   c<-input$fact
+     #   df = data.frame(matrix(""))
+     #   df[1,vars_sel[1]]=c
+     #   df[1,vars_sel[length(vars_sel)]]=a
+     #   df$matrix....<-NULL
+     #   
+     #   pred3<-predict(final_model,df)
+     #  
+     # })
    
-   
+   output$fact_inputs<- renderUI({
+     lapply(input$checkGroup,function(x){textInput(x,x,1)})
+     
+    
+     
+   })
+     
+   })   
+     
+      
 }
+     
+   
+   
+
 
 
 # Run the application 
