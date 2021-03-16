@@ -46,9 +46,13 @@ plot_list=c("Histogram","Scatterplot","Boxplot")
 
 data2<-HousePrices
 data2[,categ_list] %<>% lapply(function(x) as.numeric(as.factor(x)))
-
-
 data3<-HousePrices[,categ_list]
+
+
+#Datset:
+data_panel <- tabPanel("Dataset",
+                       DT::dataTableOutput("data")
+)
 
 
 #Create descriptive panel:
@@ -125,6 +129,7 @@ model<-tabPanel("Model section",
 # Define UI for application:
 ui <- fluidPage(navbarPage("",
                            intro_panel,
+                           data_panel,
                            descript_panel,
                            model
                            
@@ -135,6 +140,12 @@ ui <- fluidPage(navbarPage("",
 
 # Define server logic:
 server <- function(input, output) { 
+  
+  output$data <- DT::renderDataTable({
+    DT::datatable(HousePrices, options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
+    
+  })
+                             
   
   
   
@@ -294,7 +305,6 @@ server <- function(input, output) {
      p3<-p33+stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")
      p3<-p33+xlab("Fitted values")+ylab("Residuals")
      p3<-p33+ggtitle("Residual vs Fitted Plot")+theme_bw()
-     
      
      print(ggplotly(p3))
 
