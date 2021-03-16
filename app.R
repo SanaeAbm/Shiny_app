@@ -1,7 +1,5 @@
 
 
-
-
 #Loading libraries:
 library(shiny)
 library(tidyverse)
@@ -9,7 +7,7 @@ library(dplyr)
 library(AER)
 library(leaflet)
 library(magrittr)
-
+library(MASS)
 
 
 #Get data:
@@ -93,20 +91,29 @@ model<-tabPanel("Model section",
                     sidebarLayout(sidebarPanel(
                       checkboxGroupInput("checkGroup", label = h4("Select the predictors"), 
                                          choices = predictors_lis,
-                                         selected = "lotsize")),
+                                         selected = "lotsize"),
+                      h5("Let's use a criterion to validate your selection"),
+                      selectInput("select_criterion", label = h4("Choose the criterion"), 
+                                  choices =list("AIC"=2,"BIC"=log(nrow(HousePrices)))),
+                                              selected = "AIC")
+        
+                      
+                  ,
                       mainPanel( 
                         h4("Summary of the selected model"),
-                                 div(style="width:500px;",fluidRow(verbatimTextOutput("model_summary", placeholder = TRUE))))
+                                 div(style="width:500px;",fluidRow(verbatimTextOutput("model_summary", placeholder = TRUE))),
+                        h4("Summary of the final model"),
+                        div(style="width:500px;",fluidRow(verbatimTextOutput("model_summary2", placeholder = TRUE))))
+                  
                       
                       
-                      
-                    )))
-                    ,
+                    ))),
+                    
                   tabPanel("Diagnosis"),
                   tabPanel("Prediction")
-                  )
+                  
+))
 
-)
 
 
 
@@ -239,6 +246,22 @@ server <- function(input, output) {
      summary(fit)
      
    })
+   
+   output$model_summary2<-renderPrint({
+     preds=paste(input$checkGroup,collapse="+")
+     fml = as.formula(paste(response,"~", preds))
+     fit = lm(fml, data=HousePrices)
+     c=as.numeric(input$select_criterion)
+     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
+     final_model <- lm(best, data = HousePrices)
+     summary(final_model)
+      
+     
+   })
+   
+   
+   
+   
 }
 
 
