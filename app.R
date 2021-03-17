@@ -483,7 +483,7 @@ server <- function(input, output) {
          
          params <- list(
            
-           vars_sel<-isolate(as.vector(input$checkGroup))
+           vars_sel<<-isolate(as.vector(input$checkGroup))
            
          )
          
