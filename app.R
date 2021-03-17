@@ -38,9 +38,9 @@ intro_panel<-tabPanel("Home",
                       ),
                       DT::DTOutput("esTable"),
                       br(),
-                      HTML("<em> All models are wrong but some are useful</em> "),
+                      h4(em("All models are wrong but some are useful "), align="center"),
                       br(),
-                      HTML("George E.P. Box")
+                      h5("-George E.P. Box", align="center")
 )
                       
 #Data tyding:
@@ -444,10 +444,10 @@ server <- function(input, output) {
      output$shapiro_result<- renderPrint({
        
        if(shapiro[2]<0.05){
-         cat("We reject the null hypothesis, the residuals are not normally distributed")
+         cat("We reject the null hypothesis, the residuals are not normally distributed.")
        }
        else{
-          cat("Residuals are normally distributed")
+          cat("Residuals are normally distributed.")
          
        }
        
@@ -464,10 +464,10 @@ server <- function(input, output) {
      output$bptest_result<- renderPrint({
        
        if(bp[4]<0.05){
-         cat("We reject the null hypothesis, the residuals are not homoscedastic")
+         cat("We reject the null hypothesis, the residuals are not homoscedastic.")
        }
        else{
-         cat("Residuals are homoscedastic")
+         cat("Residuals are homoscedastic.")
          
        }
        
