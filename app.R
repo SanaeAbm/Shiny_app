@@ -11,6 +11,7 @@ library(magrittr)
 library(MASS)
 library(plotly)
 library(shinythemes)
+library(viridis)
 
 
 #Get data:
@@ -37,7 +38,9 @@ intro_panel<-tabPanel("Home",
                       ),
                       DT::DTOutput("esTable"),
                       br(),
-                      h4("All models are wrong but some are useful",align='center')
+                      HTML("<em> All models are wrong but some are useful</em> "),
+                      br(),
+                      HTML("George E.P. Box")
 )
                       
 #Data tyding:
@@ -94,9 +97,7 @@ descript_panel<-tabPanel("Descriptive analysis",
 
   
 #Describe model section:
-
 model<-tabPanel("Model section",
-            
                 tabsetPanel(
                   tabPanel("Build model", fluidPage(
                     sidebarLayout(sidebarPanel(
@@ -223,7 +224,9 @@ server <- function(input, output) {
           
            
                 ggplot(HousePrices, aes(x=x_name, y=as.character(y_name), fill=y_name)) +
-                  geom_boxplot()+scale_fill_brewer(palette="RdBu")
+                  geom_boxplot()+scale_fill_brewer(palette="RdBu")+ggtitle("Boxplot of the selected variables")+
+                  xlab("Continuous variable")+ ylab("Categorical variable")+ labs(fill='Classes of categorical variable') +
+                  scale_fill_viridis_d(option = "plasma")
             
             
             
@@ -246,9 +249,12 @@ server <- function(input, output) {
             })
   
             
-            ggplot( HousePrices, aes( x=x_name, color=y_name, fill=y_name) ) +
+            ggplot( HousePrices, aes( x=x_name, fill=y_name)) +
               geom_histogram(position="identity", alpha=0.5,bins=input$n_bins) +
-              ggtitle( "Frequency histogram")
+              ggtitle( "Frequency histogram")+ xlab("Continuous variable")+ labs(fill='Classes of categorical variable')+
+              scale_fill_viridis_d(option = "magma")
+              
+              
            
           }
     
@@ -271,12 +277,15 @@ server <- function(input, output) {
             
        
               ggplot(HousePrices, aes(x = 1:nrow(HousePrices), y = x_name, color=y_name)) +
-                geom_point() + labs(x = "Index")
+                geom_point() + labs(x = "Index")+ylab("Continuous variable")+ggtitle("Scatter plot of the selected variables ")+
+                 labs(color='Classes of categorical variable')+
+                scale_color_viridis_d(option = "viridis")
                   
             
           }
     })
       
+    
       
     
     output$summary1<- renderPrint({
