@@ -22,6 +22,7 @@ data("HousePrices")
 windsor<-data.frame(lat=c(42.317099),
                    lon=c(-83.0353434))
 
+
 #Create intro panel:
 intro_panel<-tabPanel("Home",
                       mainPanel(
