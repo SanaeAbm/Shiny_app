@@ -23,7 +23,7 @@ qq<-ggplot(final_model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm
   ggtitle("Normal Q-Q")+theme_bw()
 ```
 
-Let us check if the residuals are normally distributed trough a Quantile-Quantile-Plot and a Normality test: Shapiro-Wilk. 
+Firstly, we are about to check if the residuals are normally distributed trough a Quantile-Quantile-Plot and a Normality test: Shapiro-Wilk. 
 
 ```{r fig.height=5, fig.width=10}
 qq
@@ -33,11 +33,55 @@ qq
 ```{r include=FALSE}
 res<<-residuals(final_model,type="response")
 shapiro<<-shapiro.test(res)
+
+print2<-function(){
+       if(shapiro[2]<0.05){
+         cat("We reject the null hypothesis, the residuals are not normally distributed.")
+       }
+       else{
+          cat("Residuals are normally distributed.")
+         
+       }
+}
+       
 ```
 
 ```{r}
 shapiro
+print2()
 ```
 
 
+Lastly, we are analyzing the residuals to see if the homoscedasticity assumption is fullfield. To do so, we will check graphically the "Residual vs Fitted plot" and a formal test, the Breusch-Pagan test.
+
+```{r include=FALSE}
+pp<-ggplot(final_model, aes(x = .fitted, y = .resid)) + geom_point()+
+     stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")+
+     xlab("Fitted values")+ylab("Residuals")+
+     ggtitle("Residual vs Fitted Plot")+theme_bw()
+```
+
+```{r fig.height=5, fig.width=10}
+pp
+```
+
+```{r include=FALSE}
+bp<<-bptest(fit)
+
+print1<-function(){
+    if(bp[4]<0.05){
+         cat("We reject the null hypothesis, the residuals are not homoscedastic.")
+       }
+    else{
+         cat("Residuals are homoscedastic.")
+         
+       }
+  
+}
+```
+
+```{r}
+bp
+print1()
+```
 
