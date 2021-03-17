@@ -1,0 +1,43 @@
+---
+title: "Residual analysis report"
+author: "Sanae Amzigh"
+date: "17/3/2019"
+output: pdf_document
+parms: vars_sel
+---
+
+```{r include=FALSE}
+preds<<-paste(vars_sel,collapse="+")
+reponse="price"
+fml<<- as.formula(paste(response,"~", preds))
+fit<<- lm(fml, data=HousePrices)
+#c=as.numeric(input$select_criterion)
+best <<-stepAIC(fit, data = HousePrices, maxit=10,k=2)$terms
+final_model <<- lm(best, data = HousePrices)
+summary(final_model)
+```
+
+```{r include=FALSE }
+qq<-ggplot(final_model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm = TRUE)+   
+  geom_abline()+xlab("Theoretical Quantiles")+ylab("Standardized Residuals")+ 
+  ggtitle("Normal Q-Q")+theme_bw()
+```
+
+Let us check if the residuals are normally distributed trough a Quantile-Quantile-Plot and a Normality test: Shapiro-Wilk. 
+
+```{r fig.height=5, fig.width=10}
+qq
+```
+
+
+```{r include=FALSE}
+res<<-residuals(final_model,type="response")
+shapiro<<-shapiro.test(res)
+```
+
+```{r}
+shapiro
+```
+
+
+

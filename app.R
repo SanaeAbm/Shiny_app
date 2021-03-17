@@ -133,21 +133,30 @@ model<-tabPanel("Model section",
                                             fluidRow(verbatimTextOutput("shapiro_result", placeholder = TRUE)))),
                                     
                                          
+                                  
                                     column(width=7,
                                            h4("Testing Homocedasticity"),   
                                             plotlyOutput( "rf")),
                                      column (width = 5,br(),br(),br(),br(),br(),
                                              div(style="width:500px;",fluidRow(verbatimTextOutput("bptest", placeholder = TRUE)),
-                                                 fluidRow(verbatimTextOutput("bptest_result", placeholder = TRUE))))
-                                     
-                                     
-                           ))),
+                                                 fluidRow(verbatimTextOutput("bptest_result", placeholder = TRUE))),
+                                             br(),
+                                             br(),
+                                               downloadButton("report", "Generate report"))
+                                             )
+                                                
+             
+                           )
+                           ),
+                  
                   tabPanel("Prediction",fluidPage(
                     useShinyjs(),
                     h4("Introduce a value for the selected variables in the previous section"),
                            uiOutput("fact_inputs"),
                            mainPanel(h4("The predicted house price according to the inputs is:"),
                             div(style="width:500px;",fluidRow(verbatimTextOutput("var_selected", placeholder = TRUE)))
+                            
+                            
                            )
                            
                     
@@ -356,10 +365,10 @@ server <- function(input, output) {
    })
    
      
-     output$var_selected<- renderText({
+    output$var_selected<- renderText({
 
-       vars_sel<- as.vector(input$checkGroup)
-       df = data.frame(matrix(""))
+       vars_sel<<- as.vector(input$checkGroup)
+       df<-data.frame(matrix(""))
        
        sel<-function(){
          for (i in 1:length(predictors_lis)){
@@ -422,10 +431,7 @@ server <- function(input, output) {
        
        sel()
        pred3<-predict(final_model,df)
-       
-       
-      
-       
+
      }) 
      
      output$shapiro<- renderPrint({
@@ -468,6 +474,27 @@ server <- function(input, output) {
        
        
      })
+     
+     output$report <- downloadHandler(
+       filename = "report.pdf",
+       content = function(file) {
+         tempReport <- file.path(tempdir(), "report.Rmd")
+         file.copy("report.Rmd", tempReport, overwrite = TRUE)
+         
+         params <- list(
+           
+           vars_sel<-isolate(as.vector(input$checkGroup))
+           
+         )
+         
+         rmarkdown::render(tempReport, output_file = file,
+                           params = params,
+                           envir = new.env(parent = globalenv())
+                           
+         )
+       }
+       
+     )
     
 }
      
