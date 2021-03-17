@@ -10,6 +10,7 @@ library(leaflet)
 library(magrittr)
 library(MASS)
 library(plotly)
+library(shinythemes)
 
 
 #Get data:
@@ -25,7 +26,9 @@ intro_panel<-tabPanel("Home",
                       mainPanel(
                         HTML(
                           paste(
-                            h3("PREDICTING HOUSE PRICING IN WINDSOR, CANADA"),'<br/>'
+                            h3("PREDICTING HOUSE PRICING IN WINDSOR, CANADA", align="center"),
+                            br()
+                            
                           )
                         )
                       ),
@@ -33,7 +36,8 @@ intro_panel<-tabPanel("Home",
                       absolutePanel(top = 10, right = 10, id = 'controls'
                       ),
                       DT::DTOutput("esTable"),
-                      h4("All models are wrong but some are useful")
+                      br(),
+                      h4("All models are wrong but some are useful",align='center')
 )
                       
 #Data tyding:
@@ -119,10 +123,23 @@ model<-tabPanel("Model section",
                     ))),
                     
                   tabPanel("Diagnosis",fluidPage(
-                           mainPanel(plotlyOutput( "qqplot"),
-                                     plotlyOutput( "rf")
+                           fluidRow(column(width=7,
+                                     plotlyOutput( "qqplot")),
+                                    column (width = 5, 
+                                             h4("Shapiro Wilk's W test"),
+                                            div(style="width:500px;",fluidRow(verbatimTextOutput("shapiro", placeholder = TRUE)))),
+                                    column(width=7,
+                                            plotlyOutput( "rf")),
+                                     column (width = 5, 
+                                              h4("That"))
+                                     
+                                     
+                                     
+                                     
+                                     
                            ))),
                   tabPanel("Prediction",fluidPage(
+                    useShinyjs(),
                     h4("Introduce a value for the selected variables in the previous section"),
                            uiOutput("fact_inputs"),
                            mainPanel(h4("The predicted house price according to the inputs is:"),
@@ -142,7 +159,8 @@ model<-tabPanel("Model section",
 
 
 # Define UI for application:
-ui <- fluidPage(navbarPage("",
+ui <- fluidPage(theme = shinytheme("cerulean"),
+                navbarPage("",
                            intro_panel,
                            data_panel,
                            descript_panel,
@@ -211,7 +229,7 @@ server <- function(input, output) {
 
                         output$slider<-renderUI({
               req(input$select_P== "Histogram")
-              sliderInput("n_bins", label="Number of bins", min = 1, max = 50, value = input$n_bins)
+              sliderInput("n_bins", label="Number of bins", min = 5, max = 50, value = input$n_bins)
 
             })
             
@@ -268,20 +286,17 @@ server <- function(input, output) {
     })
   
    output$model_summary<-renderPrint({
-     preds=paste(input$checkGroup,collapse="+")
-     fml = as.formula(paste(response,"~", preds))
-     fit = lm(fml, data=HousePrices)
+     preds<<-paste(input$checkGroup,collapse="+")
+     fml<<- as.formula(paste(response,"~", preds))
+     fit<<- lm(fml, data=HousePrices)
      summary(fit)
      
    })
    
    output$model_summary2<-renderPrint({
-     preds=paste(input$checkGroup,collapse="+")
-     fml = as.formula(paste(response,"~", preds))
-     fit = lm(fml, data=HousePrices)
      c=as.numeric(input$select_criterion)
-     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
-     final_model <- lm(best, data = HousePrices)
+     best <<-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
+     final_model <<- lm(best, data = HousePrices)
      summary(final_model)
      
     
@@ -289,13 +304,6 @@ server <- function(input, output) {
    })
    
    output$qqplot<- renderPlotly({
-     preds=paste(input$checkGroup,collapse="+")
-     fml = as.formula(paste(response,"~", preds))
-     fit = lm(fml, data=HousePrices)
-     c=as.numeric(input$select_criterion)
-     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
-     final_model <- lm(best, data = HousePrices)
-     summary(final_model)
      
      p2 <- ggplot(final_model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm = TRUE)
      p2 <- p2+geom_abline()+xlab("Theoretical Quantiles")+ylab("Standardized Residuals")
@@ -306,13 +314,6 @@ server <- function(input, output) {
    })
    
    output$rf<-renderPlotly({
-     preds=paste(input$checkGroup,collapse="+")
-     fml = as.formula(paste(response,"~", preds))
-     fit = lm(fml, data=HousePrices)
-     c=as.numeric(input$select_criterion)
-     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
-     final_model <- lm(best, data = HousePrices)
-     summary(final_model)
      
      p33<-ggplot(final_model, aes(x = .fitted, y = .resid)) + geom_point()
      p3<-p33+stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")
@@ -343,12 +344,6 @@ server <- function(input, output) {
    
      
      output$var_selected<- renderText({
-       preds=paste(input$checkGroup,collapse="+")
-       fml = as.formula(paste(response,"~", preds))
-       fit = lm(fml, data=HousePrices)
-       c=as.numeric(input$select_criterion)
-       best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
-       final_model <- lm(best, data = HousePrices)
 
        vars_sel<- as.vector(input$checkGroup)
        df = data.frame(matrix(""))
@@ -414,10 +409,18 @@ server <- function(input, output) {
        
        sel()
        pred3<-predict(final_model,df)
-    
+       
+       
       
        
      }) 
+     
+     output$shapiro<- renderPrint({
+       res=residuals(final_model,type="response")
+       shapiro.test(res)
+       
+     })
+     
      
     
 }
