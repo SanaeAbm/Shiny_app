@@ -6,7 +6,7 @@ output: pdf_document
 parms: vars_sel
 ---
 
-```{r include=FALSE}
+```{r include=FALSE ,comment=NA }
 preds<<-paste(vars_sel,collapse="+")
 reponse="price"
 fml<<- as.formula(paste(response,"~", preds))
@@ -17,7 +17,7 @@ final_model <<- lm(best, data = HousePrices)
 summary(final_model)
 ```
 
-```{r include=FALSE }
+```{r include=FALSE  ,comment=NA}
 qq<-ggplot(final_model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm = TRUE)+   
   geom_abline()+xlab("Theoretical Quantiles")+ylab("Standardized Residuals")+ 
   ggtitle("Normal Q-Q")+theme_bw()
@@ -25,12 +25,12 @@ qq<-ggplot(final_model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm
 
 Firstly, we are about to check if the residuals are normally distributed trough a Quantile-Quantile-Plot and a Normality test: Shapiro-Wilk. 
 
-```{r fig.height=5, fig.width=10}
+```{r fig.height=5, out.width='30%' ,comment=NA}
 qq
 ```
 
 
-```{r include=FALSE}
+```{r include=FALSE ,comment=NA}
 res<<-residuals(final_model,type="response")
 shapiro<<-shapiro.test(res)
 
@@ -43,10 +43,10 @@ print2<-function(){
          
        }
 }
-       
+     
 ```
 
-```{r}
+```{r ,comment=NA}
 shapiro
 print2()
 ```
@@ -54,18 +54,18 @@ print2()
 
 Lastly, we are analyzing the residuals to see if the homoscedasticity assumption is fullfield. To do so, we will check graphically the "Residual vs Fitted plot" and a formal test, the Breusch-Pagan test.
 
-```{r include=FALSE}
+```{r include=FALSE ,comment=NA}
 pp<-ggplot(final_model, aes(x = .fitted, y = .resid)) + geom_point()+
      stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")+
      xlab("Fitted values")+ylab("Residuals")+
      ggtitle("Residual vs Fitted Plot")+theme_bw()
 ```
 
-```{r fig.height=5, fig.width=10}
+```{r fig.height=3,out.width='65%' ,comment=NA}
 pp
 ```
 
-```{r include=FALSE}
+```{r include=FALSE ,comment=NA}
 bp<<-bptest(fit)
 
 print1<-function(){
@@ -81,7 +81,7 @@ print1<-function(){
 ```
 
 
-```{r}
+```{r ,comment=NA}
 bp
 print1()
 ```

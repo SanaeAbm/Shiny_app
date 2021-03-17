@@ -17,7 +17,6 @@ library(viridis)
 #Get data:
 data("HousePrices")
 
-
 #Map coordinates:
 windsor<-data.frame(lat=c(42.317099),
                    lon=c(-83.0353434))
