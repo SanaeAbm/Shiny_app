@@ -30,7 +30,6 @@ intro_panel<-tabPanel("Home",
                           paste(
                             h3("PREDICTING HOUSE PRICING IN WINDSOR, CANADA", align="center"),
                             br()
-                            
                           )
                         )
                       ),
@@ -43,7 +42,8 @@ intro_panel<-tabPanel("Home",
                       br(),
                       h5("-George E.P. Box", align="center")
 )
-                      
+   
+                   
 #Data tyding:
 all_list<<-as.vector(names(HousePrices))
 cont_list<<-c("price","lotsize" )
