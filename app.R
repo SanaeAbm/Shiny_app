@@ -41,13 +41,13 @@ intro_panel<-tabPanel("Home",
 )
                       
 #Data tyding:
-all_list=as.vector(names(HousePrices))
-cont_list=c("price","lotsize" )
-categ_list=setdiff(all_list,cont_list)
-predictors_lis=c(categ_list,"lotsize")
-response="price"
+all_list<<-as.vector(names(HousePrices))
+cont_list<<-c("price","lotsize" )
+categ_list<<-setdiff(all_list,cont_list)
+predictors_lis<<-c(categ_list,"lotsize")
+response<<-"price"
 HousePrices[,categ_list] %<>% lapply(function(x) as.factor(as.numeric(x)))
-plot_list=c("Histogram","Scatterplot","Boxplot")
+plot_list<<-c("Histogram","Scatterplot","Boxplot")
 
 data2<-HousePrices
 data2[,categ_list] %<>% lapply(function(x) as.numeric(as.factor(x)))
@@ -124,17 +124,20 @@ model<-tabPanel("Model section",
                     
                   tabPanel("Diagnosis",fluidPage(
                            fluidRow(column(width=7,
+                                     h4("Testing normality"),
                                      plotlyOutput( "qqplot")),
                                     column (width = 5, 
-                                             h4("Shapiro Wilk's W test"),
-                                            div(style="width:500px;",fluidRow(verbatimTextOutput("shapiro", placeholder = TRUE)))),
+                                            br(),br(),br(),br(),br(),
+                                            div(style="width:500px;",fluidRow(verbatimTextOutput("shapiro", placeholder = TRUE)),
+                                            fluidRow(verbatimTextOutput("shapiro_result", placeholder = TRUE)))),
+                                    
+                                         
                                     column(width=7,
+                                           h4("Testing Homocedasticity"),   
                                             plotlyOutput( "rf")),
-                                     column (width = 5, 
-                                              h4("That"))
-                                     
-                                     
-                                     
+                                     column (width = 5,br(),br(),br(),br(),br(),
+                                             div(style="width:500px;",fluidRow(verbatimTextOutput("bptest", placeholder = TRUE)),
+                                                 fluidRow(verbatimTextOutput("bptest_result", placeholder = TRUE))))
                                      
                                      
                            ))),
@@ -149,10 +152,11 @@ model<-tabPanel("Model section",
                     
                     
                            ))
+))
 
               
              
-))
+
 
 
 
@@ -349,7 +353,7 @@ server <- function(input, output) {
        df = data.frame(matrix(""))
        
        sel<-function(){
-         for ( i in 1:length(predictors_lis)){
+         for (i in 1:length(predictors_lis)){
              if(predictors_lis[i] %not_in% vars_sel){
                a=predictors_lis[i]
                df[1,a]<<-0
@@ -416,12 +420,45 @@ server <- function(input, output) {
      }) 
      
      output$shapiro<- renderPrint({
-       res=residuals(final_model,type="response")
-       shapiro.test(res)
+       res<<-residuals(final_model,type="response")
+       shapiro<<-shapiro.test(res)
+       shapiro
        
      })
      
+     output$shapiro_result<- renderPrint({
+       
+       if(shapiro[2]<0.05){
+         cat("We reject the null hypothesis, the residuals are not normally distributed")
+       }
+       else{
+          cat("Residuals are normally distributed")
+         
+       }
+       
+       
+       
+     })
      
+     output$bptest<- renderPrint({
+       bp<<-bptest(fit)
+       bp
+       
+     })
+     
+     output$bptest_result<- renderPrint({
+       
+       if(bp[4]<0.05){
+         cat("We reject the null hypothesis, the residuals are not homoscedastic")
+       }
+       else{
+         cat("Residuals are homoscedastic")
+         
+       }
+       
+       
+       
+     })
     
 }
      
