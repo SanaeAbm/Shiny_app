@@ -49,6 +49,7 @@ data2<-HousePrices
 data2[,categ_list] %<>% lapply(function(x) as.numeric(as.factor(x)))
 data3<-HousePrices[,categ_list]
 
+`%not_in%` <- purrr::negate(`%in%`)
 
 #Datset:
 data_panel <- tabPanel("Dataset",
@@ -122,15 +123,18 @@ model<-tabPanel("Model section",
                                      plotlyOutput( "rf")
                            ))),
                   tabPanel("Prediction",fluidPage(
+                    h4("Introduce a value for the selected variables in the previous section"),
                            uiOutput("fact_inputs"),
-                           mainPanel(h4("The predicted prices according to the input:"),
+                           mainPanel(h4("The predicted house price according to the inputs is:"),
                             div(style="width:500px;",fluidRow(verbatimTextOutput("var_selected", placeholder = TRUE)))
                            )
                            
                     
                     
                            ))
-                  
+
+              
+             
 ))
 
 
@@ -320,38 +324,102 @@ server <- function(input, output) {
    })
   
    
-   output$var_selected<- renderText({
-     
-     preds=paste(input$checkGroup,collapse="+")
-     fml = as.formula(paste(response,"~", preds))
-     fit = lm(fml, data=HousePrices)
-     c=as.numeric(input$select_criterion)
-     best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
-     final_model <- lm(best, data = HousePrices)
-    
-     # vars_sel<- as.vector(input$checkGroup)
-     # 
-     #   a<-as.numeric(input$num)
-     #   c<-input$fact
-     #   df = data.frame(matrix(""))
-     #   df[1,vars_sel[1]]=c
-     #   df[1,vars_sel[length(vars_sel)]]=a
-     #   df$matrix....<-NULL
-     #   
-     #   pred3<-predict(final_model,df)
-     #  
-     # })
    
    output$fact_inputs<- renderUI({
-     lapply(input$checkGroup,function(x){textInput(x,x,1)})
-     
+     lapply(input$checkGroup,function(x){
+       textInput(inputId=x,
+                    label=x,
+                    value=1
+
+        )
+
+     }
+    )
+
     
      
+     
    })
+   
      
-   })   
-     
+     output$var_selected<- renderText({
+       preds=paste(input$checkGroup,collapse="+")
+       fml = as.formula(paste(response,"~", preds))
+       fit = lm(fml, data=HousePrices)
+       c=as.numeric(input$select_criterion)
+       best <-stepAIC(fit, data = HousePrices, maxit=10,k=c)$terms
+       final_model <- lm(best, data = HousePrices)
+
+       vars_sel<- as.vector(input$checkGroup)
+       df = data.frame(matrix(""))
+       
+       sel<-function(){
+         for ( i in 1:length(predictors_lis)){
+             if(predictors_lis[i] %not_in% vars_sel){
+               a=predictors_lis[i]
+               df[1,a]<<-0
+               
+             }
+             
+             else{
+               
+              if(predictors_lis[i]=="lotsize"){
+               df[1,predictors_lis[i]]<<-as.numeric(input$lotsize)
+              }
+               if(predictors_lis[i]=="garage"){
+                 df[1,predictors_lis[i]]<<-input$garage
+               }
+               
+               if(predictors_lis[i]=="bedrooms"){
+                 df[1,predictors_lis[i]]<<-input$bedrooms
+               }
+               
+               if(predictors_lis[i]=="bathrooms"){
+                 df[1,predictors_lis[i]]<<-input$bathrooms
+               }
+               
+               if(predictors_lis[i]=="stories"){
+                 df[1,predictors_lis[i]]<<-input$stories
+               }
+               
+               if(predictors_lis[i]=="driveway"){
+                 df[1,predictors_lis[i]]<<-input$driveway
+               }
+               
+               if(predictors_lis[i]=="recreation"){
+                 df[1,predictors_lis[i]]<<-input$recreation
+               }
+               
+               if(predictors_lis[i]=="fullbase"){
+                 df[1,predictors_lis[i]]<<-input$fullbase
+               }
+               
+               if(predictors_lis[i]=="gasheat"){
+                 df[1,predictors_lis[i]]<<-input$gasheat
+               }
+               
+               if(predictors_lis[i]=="aircon"){
+                 df[1,predictors_lis[i]]<<-input$aircon
+               }
+               
+               if(predictors_lis[i]=="prefer"){
+                 df[1,predictors_lis[i]]<<-input$prefer
+               }
+               
+             }
+           df$matrix....<-NULL
+         }
+         
+       }
+       
+       sel()
+       pred3<-predict(final_model,df)
+    
       
+       
+     }) 
+     
+    
 }
      
    
